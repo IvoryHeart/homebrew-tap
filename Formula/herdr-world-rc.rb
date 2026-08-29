@@ -4,19 +4,19 @@ class HerdrWorldRc < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.1.0-rc.10/herdr-world-v0.1.0-rc.10-macos-arm64.tar.gz"
-      sha256 "0f88ccd3300c8331a06a685d5e9d8d11cd3986b5612f6f0e0d298b68b1981235"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.1.0-rc.11/herdr-world-v0.1.0-rc.11-macos-arm64.tar.gz"
+      sha256 "43d2d9c284e0dabd5d87dab19492882a82cab5ecd15e67bc87e0c247c810bac9"
     end
     on_intel do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.1.0-rc.10/herdr-world-v0.1.0-rc.10-macos-x86_64.tar.gz"
-      sha256 "b256c78eac5c3cbe3ebc946501c63903e75866479eb0a0b2c8859810dae553c1"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.1.0-rc.11/herdr-world-v0.1.0-rc.11-macos-x86_64.tar.gz"
+      sha256 "55534e3b72cb68e59a4ac1dc2d115dc7dd12658d404652cacafbec721273b4af"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.1.0-rc.10/herdr-world-v0.1.0-rc.10-linux-x86_64.tar.gz"
-      sha256 "c995e24ae4638bc61aca53956863fd532eeb35cdb4dc0c69debe4ba548b57d21"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.1.0-rc.11/herdr-world-v0.1.0-rc.11-linux-x86_64.tar.gz"
+      sha256 "aa0508924985b2ca8b3441b460138f2de55de6fc4605a2c206072c02229f34d8"
     end
   end
 
