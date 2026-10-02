@@ -1,27 +1,27 @@
 class HerdrWorldRc < Formula
   desc "Visualize and control your agents in Office and Graph across multiple hosts"
-  homepage "https://ivoryheart.github.io/herdr-world/"
-  version "0.2.0-rc.2"
+  homepage "https://herdr.world/"
+  version "0.2.0-rc.3"
 
   on_macos do
     on_arm do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.0-rc.2/herdr-world-v0.2.0-rc.2-darwin-arm64.tar.xz"
-      sha256 "0330b7e2ab9d31ceca999741490703f53546c3b5cc67cedb87457b6ff05878a9"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.0-rc.3/herdr-world-v0.2.0-rc.3-darwin-arm64.tar.xz"
+      sha256 "12a1c43cf003e86c94f206095bb1709730ea6cd1788b98c5cbd6652fd53fb50b"
     end
     on_intel do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.0-rc.2/herdr-world-v0.2.0-rc.2-darwin-x64.tar.xz"
-      sha256 "41a5af5b28350cfac96930c3e0b8e506502b138b796abf0c7ed3796f4f64a879"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.0-rc.3/herdr-world-v0.2.0-rc.3-darwin-x64.tar.xz"
+      sha256 "67327d43f82b5a7b06f0e915a3714074f178c930becb4be9fa10f5fc974e340b"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.0-rc.2/herdr-world-v0.2.0-rc.2-linux-arm64.tar.xz"
-      sha256 "f9abcc93d07088153b3860d0c73b528521cb708ea1cbbb961ccbb9eea3c4d7b3"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.0-rc.3/herdr-world-v0.2.0-rc.3-linux-arm64.tar.xz"
+      sha256 "0aaddd6a79d41988acc8da9438f7f81a60085560d5c8f40c09df754ff6b9098c"
     end
     on_intel do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.0-rc.2/herdr-world-v0.2.0-rc.2-linux-x64.tar.xz"
-      sha256 "b5585fce2a5ba04f45d08919cd977a733c2efa3d71ea3aacadf3b227034fbc32"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.0-rc.3/herdr-world-v0.2.0-rc.3-linux-x64.tar.xz"
+      sha256 "2869c96c68b904f413bc672f816808065b06fdfe50e148505fc2325127ad1bd1"
     end
   end
 
@@ -36,6 +36,6 @@ class HerdrWorldRc < Formula
   end
 
   test do
-    assert_match "herdr-world 0.2.0-rc.2", shell_output("#{bin}/herdr-world --version")
+    assert_match "herdr-world 0.2.0-rc.3", shell_output("#{bin}/herdr-world --version")
   end
 end
