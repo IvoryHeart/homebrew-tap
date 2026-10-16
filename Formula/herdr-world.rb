@@ -1,27 +1,27 @@
 class HerdrWorld < Formula
   desc "Visualize and control your agents in Office and Graph across multiple hosts"
   homepage "https://herdr.world/"
-  version "0.2.3"
+  version "0.2.4"
 
   on_macos do
     on_arm do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.3/herdr-world-v0.2.3-darwin-arm64.tar.xz"
-      sha256 "715e0116c9833b798c120051b20d66f2d62ff37349057573194ec65184644937"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.4/herdr-world-v0.2.4-darwin-arm64.tar.xz"
+      sha256 "a39bf28f0b05d8535117637cfd784547740b632b944ae6bb12edafad12257bd0"
     end
     on_intel do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.3/herdr-world-v0.2.3-darwin-x64.tar.xz"
-      sha256 "4e495e538ace097e044953f5b6a972e361e263c2e198af6d8d2487564c85ea78"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.4/herdr-world-v0.2.4-darwin-x64.tar.xz"
+      sha256 "4b79d83d80a32e54b7d488cedb924a1b3e7277043db0717d89fa27af72d8db4e"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.3/herdr-world-v0.2.3-linux-arm64.tar.xz"
-      sha256 "6a758d594e588650299007f871858ccdc62f65b508b8f1cd8ef4c5c03c01f80d"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.4/herdr-world-v0.2.4-linux-arm64.tar.xz"
+      sha256 "391ca6df140da1908a3f6ee00ebca120364faaa6d6c9f333a0f0d1514b81811c"
     end
     on_intel do
-      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.3/herdr-world-v0.2.3-linux-x64.tar.xz"
-      sha256 "4d9a5a30fe986e5f00cd0ece96afaf3326e1b291c749def07a092e419ba605fd"
+      url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.4/herdr-world-v0.2.4-linux-x64.tar.xz"
+      sha256 "963ca4c986d63c77a4e6d4ba3dcda1a9d0f14d9ad61e4dc2fa2d806b485fbdac"
     end
   end
 
@@ -36,6 +36,6 @@ class HerdrWorld < Formula
   end
 
   test do
-    assert_match "herdr-world 0.2.3", shell_output("#{bin}/herdr-world --version")
+    assert_match "herdr-world 0.2.4", shell_output("#{bin}/herdr-world --version")
   end
 end
