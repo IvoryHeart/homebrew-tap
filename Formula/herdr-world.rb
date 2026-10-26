@@ -32,6 +32,11 @@ class HerdrWorld < Formula
   conflicts_with "herdr-world-rc", because: "both Formulae provide the herdr-world command"
 
   def install
+    herdr_output = Utils.safe_popen_read(Formula["herdr"].opt_bin/"herdr", "--version")
+    herdr_version = herdr_output[/^herdr ([0-9]+[.][0-9]+[.][0-9]+)/, 1]
+    if herdr_version.nil? || Version.new(herdr_version) < Version.new("0.9.5")
+      odie "Herdr 0.9.5 or newer is required; run brew update && brew upgrade herdr, then retry."
+    end
     libexec.install "herdr-world", "VERSION",
       "LICENSE", "THIRD_PARTY_NOTICES.md",
       "DEPENDENCY_NOTICES.md", "DEPENDENCY_LICENSES.md",
