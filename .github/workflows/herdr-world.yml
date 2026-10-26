@@ -1,10 +1,11 @@
-name: Herdr World ownership
+name: Herdr World runtime reuse
 
 on:
   pull_request:
     paths:
       - Formula/herdr-world.rb
       - .github/workflows/herdr-world.yml
+      - .github/scripts/check-homebrew-runtime.rb
   workflow_dispatch:
 
 permissions:
@@ -12,9 +13,9 @@ permissions:
 
 jobs:
   ownership:
-    name: Herdr ownership (${{ matrix.runner }})
+    name: Herdr reuse (${{ matrix.runner }})
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 120
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -27,43 +28,27 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - name: Install World and test its Herdr dependency
+      - name: Install World without a mandatory Herdr formula
         shell: bash
         run: |
           set -euo pipefail
           brew update
-          brew info --json=v2 herdr > "$RUNNER_TEMP/herdr-core.json"
-          ruby -rjson -rrubygems/version - "$RUNNER_TEMP/herdr-core.json" Formula/herdr-world.rb <<'RUBY'
-          info = JSON.parse(File.read(ARGV[0])).fetch("formulae").first
-          available = Gem::Version.new(info.fetch("versions").fetch("stable"))
-          minimum = File.read(ARGV[1])[/Version\.new\("([0-9]+\.[0-9]+\.[0-9]+)"\)/, 1]
-          abort "Missing formula runtime floor" unless minimum
-          abort "Stale core Herdr #{available}; need #{minimum}" if available < Gem::Version.new(minimum)
-          puts "Selected current core Herdr #{available}, minimum #{minimum}"
-          RUBY
           tap=herdrworld/ownership-check
           brew tap-new --no-git "$tap"
           install -m 0644 Formula/herdr-world.rb "$(brew --repository "$tap")/Formula/herdr-world.rb"
           brew install --formula "$tap/herdr-world"
+          test -z "$(brew deps "$tap/herdr-world")"
+          test ! -e "$(brew --prefix "$tap/herdr-world")/bin/herdr"
           brew test "$tap/herdr-world"
-      - name: Preserve an existing Herdr owner across World installation
+      - name: Bootstrap missing Herdr and preserve it across World reinstall
         shell: bash
         run: |
           set -euo pipefail
           package=herdrworld/ownership-check/herdr-world
-          herdr_binary="$(brew --prefix herdr)/bin/herdr"
-          herdr_owner="$(cd "$(dirname "$herdr_binary")" && pwd -P)"
-          case "$herdr_owner" in
-            "$(brew --cellar)/herdr/"*/bin) ;;
-            *) printf 'Herdr resolved outside its owning keg: %s\n' "$herdr_owner"; exit 1 ;;
-          esac
-          herdr_link="$(readlink "$(brew --prefix)/bin/herdr")"
-          herdr_digest="$(shasum -a 256 "$herdr_binary")"
+          world="$(brew --prefix "$package")/bin/herdr-world"
+          fixture_home="$RUNNER_TEMP/herdr-world-runtime"
+          ruby .github/scripts/check-homebrew-runtime.rb "$world" "$fixture_home"
+          brew reinstall --formula "$package"
           test ! -e "$(brew --prefix "$package")/bin/herdr"
-          brew uninstall "$package"
-          test -x "$herdr_binary"
-          brew install --formula "$package"
-          test "$(readlink "$(brew --prefix)/bin/herdr")" = "$herdr_link"
-          test "$(shasum -a 256 "$herdr_binary")" = "$herdr_digest"
-          test ! -e "$(brew --prefix "$package")/bin/herdr"
+          ruby .github/scripts/check-homebrew-runtime.rb "$world" "$fixture_home"
           brew test "$package"

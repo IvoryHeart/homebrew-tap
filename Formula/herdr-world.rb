@@ -3,10 +3,6 @@ class HerdrWorld < Formula
   homepage "https://herdr.world/"
   version "0.2.7"
 
-  # Herdr retains its own Homebrew owner, including on Intel Macs where
-  # Homebrew may build it from source instead of pouring a bottle.
-  depends_on "herdr"
-
   on_macos do
     on_arm do
       url "https://github.com/IvoryHeart/herdr-world/releases/download/v0.2.7/herdr-world-v0.2.7-darwin-arm64.tar.xz"
@@ -32,23 +28,54 @@ class HerdrWorld < Formula
   conflicts_with "herdr-world-rc", because: "both Formulae provide the herdr-world command"
 
   def install
-    herdr_output = Utils.safe_popen_read(Formula["herdr"].opt_bin/"herdr", "--version")
-    herdr_version = herdr_output[/^herdr ([0-9]+[.][0-9]+[.][0-9]+)/, 1]
-    if herdr_version.nil? || Version.new(herdr_version) < Version.new("0.9.5")
-      odie "Herdr 0.9.5 or newer is required; run brew update && brew upgrade herdr, then retry."
-    end
     libexec.install "herdr-world", "VERSION",
       "LICENSE", "THIRD_PARTY_NOTICES.md",
       "DEPENDENCY_NOTICES.md", "DEPENDENCY_LICENSES.md",
       "UPSTREAM.md", "LICENSES"
-    bin.install_symlink libexec/"herdr-world"
+    (bin/"herdr-world").write <<~SH
+      #!/bin/sh
+      set -eu
+      world=#{(libexec/"herdr-world").to_s.shellescape}
+
+      # Metadata and management commands keep their existing behavior. Only listener
+      # startup needs the local runtime; remote/custom endpoints keep their own owner.
+      bootstrap=0
+      case "${1:-}" in
+        --version|-V|--help|-h|--skill) ;;
+        ""|-*) bootstrap=1 ;;
+      esac
+      for argument in "$@"; do
+        case "$argument" in
+          --version|-V|--help|-h|--skill|--ssh-host|--ssh-host=*|--socket-path|--socket-path=*|--client-socket-path|--client-socket-path=*|--session|--session=*) bootstrap=0 ;;
+        esac
+      done
+      if [ -n "${HERDR_SSH_HOST:-}${HERDR_SOCKET_PATH:-}${HERDR_CLIENT_SOCKET_PATH:-}${HERDR_SESSION:-}" ]; then
+        bootstrap=0
+      fi
+      if [ "$bootstrap" = 1 ] && [ "${HERDR_WORLD_SKIP_HERDR:-}" != 1 ]; then
+        status="$("$world" herdr status)"
+        case "$status" in
+          'Herdr is not installed.'*)
+            "$world" herdr upgrade --install --no-integrations --no-plugin
+            ;;
+        esac
+      fi
+      exec "$world" "$@"
+    SH
+    (bin/"herdr-world").chmod 0755
+  end
+
+  def caveats
+    <<~EOS
+      World reuses your existing Herdr. On first launch, if Herdr is missing,
+      it installs the verified prebuilt release in ~/.local/bin, outside Homebrew.
+      Existing Herdr installations are not upgraded. Add ~/.local/bin to PATH.
+      Run herdr-world herdr setup to start Herdr as a user service.
+    EOS
   end
 
   test do
     assert_match "herdr-world 0.2.7", shell_output("#{bin}/herdr-world --version")
-    herdr_output = shell_output("#{Formula["herdr"].opt_bin}/herdr --version")
-    assert_match /^herdr /, herdr_output
-    assert_operator Version.new(herdr_output[/[0-9]+[.][0-9]+[.][0-9]+/]), :>=,
-                    Version.new("0.9.5")
+    assert_match "Herdr", shell_output("#{bin}/herdr-world herdr status")
   end
 end
