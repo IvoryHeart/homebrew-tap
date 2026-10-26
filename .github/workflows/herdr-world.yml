@@ -1,0 +1,59 @@
+name: Herdr World ownership
+
+on:
+  pull_request:
+    paths:
+      - Formula/herdr-world.rb
+      - .github/workflows/herdr-world.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ownership:
+    name: Herdr ownership (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      HOMEBREW_NO_AUTOREMOVE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Install World and test its Herdr dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          tap=herdrworld/ownership-check
+          brew tap-new --no-git "$tap"
+          install -m 0644 Formula/herdr-world.rb "$(brew --repository "$tap")/Formula/herdr-world.rb"
+          brew install --formula "$tap/herdr-world"
+          brew test "$tap/herdr-world"
+      - name: Preserve an existing Herdr owner across World installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          package=herdrworld/ownership-check/herdr-world
+          herdr_binary="$(brew --prefix herdr)/bin/herdr"
+          herdr_owner="$(cd "$(dirname "$herdr_binary")" && pwd -P)"
+          case "$herdr_owner" in
+            "$(brew --cellar)/herdr/"*/bin) ;;
+            *) printf 'Herdr resolved outside its owning keg: %s\n' "$herdr_owner"; exit 1 ;;
+          esac
+          herdr_link="$(readlink "$(brew --prefix)/bin/herdr")"
+          herdr_digest="$(shasum -a 256 "$herdr_binary")"
+          test ! -e "$(brew --prefix "$package")/bin/herdr"
+          brew uninstall "$package"
+          test -x "$herdr_binary"
+          brew install --formula "$package"
+          test "$(readlink "$(brew --prefix)/bin/herdr")" = "$herdr_link"
+          test "$(shasum -a 256 "$herdr_binary")" = "$herdr_digest"
+          test ! -e "$(brew --prefix "$package")/bin/herdr"
+          brew test "$package"
