@@ -42,6 +42,12 @@ class HerdrWorld < Formula
       install_missing_herdr() (
         status="$("$world" herdr status)" || return 1
         case "$status" in 'Herdr is not installed.'*) ;; *) return 0 ;; esac
+        install_dir="${HERDR_INSTALL_DIR:-$HOME/.local/bin}"
+        if [ -e "$install_dir/herdr" ] || [ -L "$install_dir/herdr" ]; then
+          if [ -f "$install_dir/herdr" ] && [ -x "$install_dir/herdr" ]; then return 0; fi
+          printf 'Herdr installation blocked by non-executable entry: %s; repair it before retrying.\n' "$install_dir/herdr" >&2
+          return 1
+        fi
         case "$(uname -s):$(uname -m)" in
           Linux:x86_64|Linux:amd64) target=linux-x86_64; expected=14d9e8bc8b4a9e0118d77c32266f76d461f09b40342eb23752960bd89f59929d ;;
           Linux:aarch64|Linux:arm64) target=linux-aarch64; expected=17d7536f2da50859523680ef279dffcac8e4a235f4e46fe8da6c2ec44141897c ;;
@@ -49,7 +55,6 @@ class HerdrWorld < Formula
           Darwin:arm64|Darwin:aarch64) target=macos-aarch64; expected=fb77c2232a05a8035421382c894392f4174e4e38a18e48af3dd0290157c3a7e2 ;;
           *) return 1 ;;
         esac
-        install_dir="${HERDR_INSTALL_DIR:-$HOME/.local/bin}"
         mkdir -p "$install_dir" || return 1
         staging="$(mktemp -d "$install_dir/.herdr.XXXXXXXX")" || return 1
         trap 'rm -rf "$staging"' 0
@@ -70,7 +75,8 @@ class HerdrWorld < Formula
         case "$status" in 'Herdr is not installed.'*) ;; *) return 0 ;; esac
         if ln "$staging/herdr" "$install_dir/" 2>/dev/null; then
           printf '%s\n' 'Installed Herdr 0.9.5.'
-        elif [ ! -e "$install_dir/herdr" ] && [ ! -L "$install_dir/herdr" ]; then
+        elif [ ! -f "$install_dir/herdr" ] || [ ! -x "$install_dir/herdr" ]; then
+          printf 'Herdr installation blocked by non-executable entry: %s; repair it before retrying.\n' "$install_dir/herdr" >&2
           return 1
         fi
       )

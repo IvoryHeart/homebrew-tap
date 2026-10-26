@@ -13,7 +13,9 @@ No mandatory Herdr formula or Intel source build is needed. Add `~/.local/bin` t
 service. Installation preserves an existing runtime's version and owner.
 
 If automatic setup fails, World still starts so remote profiles and in-app setup
-remain available. Retry with `herdr-world herdr upgrade --install`.
+remain available. Retry with `herdr-world herdr upgrade --install`. A broken link
+or non-executable entry at Herdr's default path is reported before downloading;
+repair that entry before retrying.
 
 Metadata and management commands do not trigger bootstrap. Set
 `HERDR_WORLD_SKIP_HERDR=1` to skip it for a normal launch. Update Herdr explicitly
