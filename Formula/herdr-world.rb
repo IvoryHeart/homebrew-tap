@@ -37,6 +37,44 @@ class HerdrWorld < Formula
       set -eu
       world=#{(libexec/"herdr-world").to_s.shellescape}
 
+      # A published World binary may predate missing-only CLI support. Keep this Unix
+      # compatibility path independent of its upgrade command, with atomic publication.
+      install_missing_herdr() (
+        status="$("$world" herdr status)" || return 1
+        case "$status" in 'Herdr is not installed.'*) ;; *) return 0 ;; esac
+        case "$(uname -s):$(uname -m)" in
+          Linux:x86_64|Linux:amd64) target=linux-x86_64; expected=14d9e8bc8b4a9e0118d77c32266f76d461f09b40342eb23752960bd89f59929d ;;
+          Linux:aarch64|Linux:arm64) target=linux-aarch64; expected=17d7536f2da50859523680ef279dffcac8e4a235f4e46fe8da6c2ec44141897c ;;
+          Darwin:x86_64|Darwin:amd64) target=macos-x86_64; expected=5fb0a908ec7f6745e3e245738b06bfad56c46391c391ab3c0955fbead01f1369 ;;
+          Darwin:arm64|Darwin:aarch64) target=macos-aarch64; expected=fb77c2232a05a8035421382c894392f4174e4e38a18e48af3dd0290157c3a7e2 ;;
+          *) return 1 ;;
+        esac
+        install_dir="${HERDR_INSTALL_DIR:-$HOME/.local/bin}"
+        mkdir -p "$install_dir" || return 1
+        staging="$(mktemp -d "$install_dir/.herdr.XXXXXXXX")" || return 1
+        trap 'rm -rf "$staging"' 0
+        trap 'exit 1' HUP INT TERM
+        curl -fsSL --proto '=https' --proto-redir '=https' --max-time 120 -o "$staging/herdr" "https://github.com/herdrdev/herdr/releases/download/v0.9.5/herdr-$target" || return 1
+        if command -v shasum >/dev/null 2>&1; then
+          actual="$(shasum -a 256 "$staging/herdr" | awk '{print $1}')"
+        else
+          actual="$(sha256sum "$staging/herdr" | awk '{print $1}')"
+        fi
+        [ "$actual" = "$expected" ] || return 1
+        chmod 755 "$staging/herdr" || return 1
+        version="$("$staging/herdr" --version)" || return 1
+        [ "$version" = 'herdr 0.9.5' ] || return 1
+        # Recheck every discovery path after download; publication below still refuses
+        # an entry created at the destination after this check, including symlinks.
+        status="$("$world" herdr status)" || return 1
+        case "$status" in 'Herdr is not installed.'*) ;; *) return 0 ;; esac
+        if ln "$staging/herdr" "$install_dir/" 2>/dev/null; then
+          printf '%s\n' 'Installed Herdr 0.9.5.'
+        elif [ ! -e "$install_dir/herdr" ] && [ ! -L "$install_dir/herdr" ]; then
+          return 1
+        fi
+      )
+
       # Metadata and management commands keep their existing behavior. Only listener
       # startup needs the local runtime; remote/custom endpoints keep their own owner.
       bootstrap=0
@@ -52,13 +90,13 @@ class HerdrWorld < Formula
       if [ -n "${HERDR_SSH_HOST:-}${HERDR_SOCKET_PATH:-}${HERDR_CLIENT_SOCKET_PATH:-}${HERDR_SESSION:-}" ]; then
         bootstrap=0
       fi
+      warn_bootstrap() {
+        printf '%s\n' 'Herdr World: Herdr check or installation failed; starting World anyway. Retry with `herdr-world herdr upgrade --install`, or set HERDR_WORLD_SKIP_HERDR=1 to skip automatic setup.' >&2
+      }
       if [ "$bootstrap" = 1 ] && [ "${HERDR_WORLD_SKIP_HERDR:-}" != 1 ]; then
-        status="$("$world" herdr status)"
-        case "$status" in
-          'Herdr is not installed.'*)
-            "$world" herdr upgrade --install --no-integrations --no-plugin
-            ;;
-        esac
+        if ! install_missing_herdr; then
+          warn_bootstrap
+        fi
       fi
       exec "$world" "$@"
     SH
@@ -70,6 +108,8 @@ class HerdrWorld < Formula
       World reuses your existing Herdr. On first launch, if Herdr is missing,
       it installs the verified prebuilt release in ~/.local/bin, outside Homebrew.
       Existing Herdr installations are not upgraded. Add ~/.local/bin to PATH.
+      If automatic setup fails, World still starts. Retry with
+      herdr-world herdr upgrade --install, or set HERDR_WORLD_SKIP_HERDR=1.
       Run herdr-world herdr setup to start Herdr as a user service.
     EOS
   end
