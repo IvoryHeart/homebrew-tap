@@ -15,7 +15,9 @@ service. Installation preserves an existing runtime's version and owner.
 If automatic setup fails, World still starts so remote profiles and in-app setup
 remain available. Retry with `herdr-world herdr upgrade --install`. A broken link
 or non-executable entry at Herdr's default path is reported before downloading;
-repair that entry before retrying.
+repair that entry before retrying. The selected entry must be a regular executable
+file, even when status labels it installed. A reachable Herdr server is reused
+when its executable is outside the shell's path.
 
 Metadata and management commands do not trigger bootstrap. Set
 `HERDR_WORLD_SKIP_HERDR=1` to skip it for a normal launch. Update Herdr explicitly
